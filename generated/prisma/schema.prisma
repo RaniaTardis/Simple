@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -60,8 +61,8 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  password      String? // هذا ما كان ناقصاً
-  role          String    @default("USER") // وهذا أيضاً
+  password      String?
+  role          String    @default("USER")
   emailVerified DateTime?
   image         String?
   accounts      Account[]
