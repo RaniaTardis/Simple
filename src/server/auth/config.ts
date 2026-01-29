@@ -3,7 +3,6 @@ import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "~/server/db";
 
-// 1. تعريف واجهة المستخدم لضمان سلامة الأنواع (Type Safety)
 interface AuthUser {
   id: string;
   email: string;
@@ -20,6 +19,8 @@ declare module "next-auth" {
   }
 }
 
+const adapterDb = db as unknown as Parameters<typeof PrismaAdapter>[0];
+
 export const authConfig = {
   providers: [
     CredentialsProvider({
@@ -29,11 +30,13 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
         const user = await db.user.findUnique({
-          where: { email: credentials?.email as string },
+          where: { email: credentials.email as string },
         });
 
-        if (user && user.password === credentials?.password) {
+        if (user?.password && user.password === credentials.password) {
           return {
             id: user.id,
             name: user.name ?? "User",
@@ -45,7 +48,8 @@ export const authConfig = {
       },
     }),
   ],
-  adapter: PrismaAdapter(db),
+
+  adapter: PrismaAdapter(adapterDb),
   session: { strategy: "jwt" },
   callbacks: {
     jwt: ({ token, user }) => {
